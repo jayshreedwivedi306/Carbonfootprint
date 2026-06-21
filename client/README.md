@@ -187,7 +187,7 @@ npm run db:seed
 ```bash
 cd server
 npm run dev
-
+```
 
 ### Frontend
 
@@ -195,7 +195,6 @@ npm run dev
 cd client
 npm run dev
 ```
-
 
 ### Docker Setup
 
