@@ -1,0 +1,57 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String             @id @default(uuid())
+  email               String             @unique
+  passwordHash        String?            // Nullable for OAuth users
+  role                String             @default("USER") // "USER" or "ADMIN"
+  oauthProvider       String?            // "google", "github", etc.
+  oauthId             String?
+  resetToken          String?            // Password reset token
+  resetTokenExpiry    DateTime?          // Token expiry time
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  logs                CarbonLog[]
+  suggestions         AdoptedSuggestion[]
+}
+
+model CarbonLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt  DateTime @default(now())
+  travelCo2   Float
+  energyCo2   Float
+  dietCo2     Float
+  totalCo2    Float
+  inputsJson  String   // Stringified JSON storing raw answers
+}
+
+model Suggestion {
+  id                 String              @id @default(uuid())
+  title              String
+  description        String
+  category           String              // "TRAVEL", "ENERGY", "DIET"
+  reductionPotential Float               // kg CO2 reduced per week/month
+  adoptedBy          AdoptedSuggestion[]
+}
+
+model AdoptedSuggestion {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestionId String
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  status       String     @default("ACTIVE") // "ACTIVE", "COMPLETED"
+  createdAt    DateTime   @default(now())
+  completedAt  DateTime?
+
+  @@unique([userId, suggestionId])
+}
