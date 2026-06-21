@@ -1,0 +1,16 @@
+runtime: nodejs20
+env: standard
+service_account: carbonfootprints@carbonfootprints-500112.iam.gserviceaccount.com
+
+env_variables:
+  NODE_ENV: "production"
+  DATABASE_URL: "${DB_CONNECTION_STRING}"
+  JWT_SECRET: "${JWT_SECRET_VALUE}"
+  PORT: "8080"
+
+builtin_setting_values:
+  cloud_sql_instances: "carbonfootprints-500112:us-central1:carbonfootprint-db"
+
+handlers:
+  - url: /.*
+    script: auto

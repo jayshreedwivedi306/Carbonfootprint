@@ -1,0 +1,57 @@
+steps:
+  # Build server Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/carbonfootprints-500112/carbon-server:latest', '-f', 'server/Dockerfile', './server']
+    id: 'build-server'
+
+  # Build client Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/carbonfootprints-500112/carbon-client:latest', '-f', 'client/Dockerfile', './client']
+    id: 'build-client'
+
+  # Push server image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/carbonfootprints-500112/carbon-server:latest']
+    id: 'push-server'
+    waitFor: ['build-server']
+
+  # Push client image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/carbonfootprints-500112/carbon-client:latest']
+    id: 'push-client'
+    waitFor: ['build-client']
+
+  # Deploy server to Cloud Run
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    args:
+      - run
+      - --filename=.gcp/server-deployment.yaml
+      - --image=gcr.io/carbonfootprints-500112/carbon-server:latest
+      - --location=us-central1
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+    id: 'deploy-server'
+    waitFor: ['push-server']
+
+  # Deploy client to Cloud Run
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    args:
+      - run
+      - --filename=.gcp/client-deployment.yaml
+      - --image=gcr.io/carbonfootprints-500112/carbon-client:latest
+      - --location=us-central1
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+    id: 'deploy-client'
+    waitFor: ['push-client']
+
+images:
+  - 'gcr.io/carbonfootprints-500112/carbon-server:latest'
+  - 'gcr.io/carbonfootprints-500112/carbon-client:latest'
+
+substitutions:
+  _REGION: 'us-central1'
+  _PROJECT_ID: 'carbonfootprints-500112'
+
+options:
+  machineType: 'N1_HIGHCPU_8'

@@ -1,0 +1,43 @@
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
+metadata:
+  name: carbon-cluster
+  namespace: cnrm-system
+spec:
+  location: us-central1-a
+  initialNodeCount: 3
+  machineType: n1-standard-2
+  defaultMaxPodsPerNode: 110
+  addonsConfig:
+    httpLoadBalancing:
+      disabled: false
+    horizontalPodAutoscaling:
+      disabled: false
+  workloadIdentityConfig:
+    workloadPool: carbonfootprints-500112.svc.id.goog
+  releaseChannel:
+    channel: STABLE
+  nodeConfig:
+    machineType: n1-standard-2
+    oauthScopes:
+      - 'https://www.googleapis.com/auth/cloud-platform'
+    labels:
+      app: carbon-footprint
+    metadata:
+      disable-legacy-endpoints: "true"
+---
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerNodePool
+metadata:
+  name: carbon-node-pool
+  namespace: cnrm-system
+spec:
+  cluster: carbon-cluster
+  nodeCount: 2
+  nodeConfig:
+    machineType: n1-standard-2
+    diskSizeGb: 50
+    oauthScopes:
+      - 'https://www.googleapis.com/auth/cloud-platform'
+    labels:
+      workload: carbon

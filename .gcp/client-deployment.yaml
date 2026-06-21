@@ -1,0 +1,41 @@
+apiVersion: run.cnrm.cloud.google.com/v1beta1
+kind: RunService
+metadata:
+  name: carbon-client
+  namespace: carbon-production
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/carbonfootprints-500112/carbon-client:latest
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+  traffic:
+    - percent: 100
+      latestRevision: true
+---
+apiVersion: run.cnrm.cloud.google.com/v1beta1
+kind: RunService
+metadata:
+  name: carbon-client
+spec:
+  location: us-central1
+  template:
+    spec:
+      containers:
+        - image: gcr.io/carbonfootprints-500112/carbon-client:latest
+          ports:
+            - containerPort: 80
